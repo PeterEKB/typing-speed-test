@@ -1,1 +1,1 @@
-Live demo: https://peterEKB.github.io/random-users/
+Live demo: https://peterEKB.github.io/typing-speed-test/
