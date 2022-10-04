@@ -1,16 +1,40 @@
+console.log(2.0)
 /* * * * APIs * * * */
 class APIs {
   rndWord = async (c, l) => {
     const bUrl = 'https://random-word-api.herokuapp.com/word',
-      query = c ? (l ? `?number=${c}&length=${l}` : `?number=${c}`) : '';
+      query = c
+        ? l
+          ? `?lang=en&number=${c}&length=${l}`
+          : `?lang=en&number=${c}`
+        : '';
 
     return await fetch(`${bUrl + query}`).then((res) => res.json());
   };
 }
 
+/* * * * Safari/Firefox Compatibility * * * */
+(() => {
+  if (!('path' in Event.prototype))
+    Object.defineProperty(Event.prototype, 'path', {
+      get: function () {
+        var path = [];
+        var currentElem = this.target;
+        while (currentElem) {
+          path.push(currentElem);
+          currentElem = currentElem.parentElement;
+        }
+        if (path.indexOf(window) === -1 && path.indexOf(document) === -1)
+          path.push(document);
+        if (path.indexOf(window) === -1) path.push(window);
+        return path;
+      },
+    });
+})();
 /* * * * View * * * */
 
 class View {
+  isActive = 0;
   typeArea = document.querySelector('type-area');
   time = document.querySelector('time');
   speed = document.querySelector('speed');
@@ -20,15 +44,42 @@ class View {
   txtRec = this.typeArea.querySelector('commit');
   txtTrack = this.typeArea.querySelector('text#track');
   active = 'active';
+
+  init() {
+    this.time.innerHTML = 0;
+    this.speed.innerHTML = 0;
+    this.accuracy.innerHTML = 0;
+  }
+  set activate(s) {
+    const v = this.typeArea.classList;
+
+    if (s) {
+      v.add(this.active);
+      this.isActive = 1;
+    } else {
+      v.remove(this.active);
+      this.isActive = 0;
+    }
+  }
+  set disTyped(t) {
+    this.txtTrack.innerHTML = t;
+  }
+  set pushTyped(ele) {
+    this.txtRec.appendChild(ele);
+  }
+  get reset() {
+    this.disTyped = '';
+    this.txtRec.innerHTML = '';
+    this.txtDis.innerHTML = '';
+  }
 }
 
 /* * * * Model * * * */
 
 class Model {
-  #time;
+  __time;
   time = 0;
-  tLimit = 60;
-  isActive = 0;
+  tLimit = 10;
   isEnvokable = 1;
   pos = 0;
   score = {
@@ -46,7 +97,6 @@ class Model {
   constructor(data) {
     this.apis = data.Apis || data.Api || data.apis || data.api;
     this.view = data.Views || data.View || data.views || data.view;
-    this.#listeners;
   }
 
   async getWords(c, l) {
@@ -56,15 +106,22 @@ class Model {
 
     return this.words;
   }
+  init() {
+    const wrds = this.getWords(200, 4);
 
+    this.view.init();
+
+    wrds.then((res) => {
+      this.disWords(res);
+    });
+  }
   get reset() {
     this.timer = 0;
     this.time = 0;
-    this.isActive = 0;
+    this.view.isActive = 0;
     this.isEnvokable = 1;
     this.pos = 0;
     this.words = [];
-    this.pos = 0;
     this.score = {
       correct: 0,
       incorrect: 0,
@@ -76,9 +133,7 @@ class Model {
     };
     this.typed = '';
     this.committed = [];
-    this.view.txtRec.innerHTML = '';
-    this.view.txtDis.innerHTML = '';
-    this.disTyped;
+    this.view.reset;
     App.init;
   }
   get timer() {
@@ -88,7 +143,7 @@ class Model {
     let n = 1;
 
     if (p) {
-      this.#time = setInterval(() => {
+      this.__time = setInterval(() => {
         this.time = +(parseFloat(this.time) + parseFloat(n)).toFixed(2);
         if (this.time === this.tLimit) this.timer = 0;
         this.view.time.innerHTML = this.time;
@@ -132,11 +187,14 @@ class Model {
       s.incorrect++;
       s.total++;
     }
-    s.accuracyInt = ((s.correct / s.total) * 100).toFixed(0);
+    s.accuracyInt =
+      ((s.correct / s.total) * 100).toFixed(0) !== 'NaN'
+        ? ((s.correct / s.total) * 100).toFixed(0)
+        : 0;
     s.accuracy = s.accuracyInt + '%';
     s.speedInt = ((s.total * 60) / this.time).toFixed(0);
     s.speed = s.speedInt + ' words per minute';
-    console.log(r, s.speed);
+    console.log(r, s.accuracyInt);
     return s;
   }
   get commit() {
@@ -169,9 +227,6 @@ class Model {
       }
     }
   }
-  get disTyped() {
-    this.view.txtTrack.innerHTML = this.typed;
-  }
   disWords(c) {
     const tA = this.view.txtDis;
     c.forEach((v) => {
@@ -179,81 +234,16 @@ class Model {
       tA.appendChild(tmp);
     });
   }
-  set pushTyped(t) {
+  formatColor(t) {
     const ele =
       typeof t === 'object' ? this.format(t.typed, t.same) : this.format(t);
-    this.view.txtRec.appendChild(ele);
-  }
-  set activate(s) {
-    const v = this.view;
-
-    if (s) {
-      v.typeArea.classList.add(v.active);
-      this.isActive = 1;
-    } else {
-      v.typeArea.classList.remove(v.active);
-      this.isActive = 0;
-    }
+    return ele;
   }
   get end() {
-    this.activate = 0;
+    this.view.activate = 0;
     this.isEnvokable = 0;
-    clearInterval(this.#time);
-    this.#time = undefined;
-  }
-  get #listeners() {
-    const v = this.view;
-
-    window.addEventListener('blur', (e) => {});
-    document.addEventListener('click', (e) => {
-      if (e.path.includes(v.typeArea)) {
-        this.activate = 1;
-        if (!this.isEnvokable) this.reset;
-      } else {
-        this.activate = 0;
-      }
-    });
-    document.addEventListener('keydown', (e) => {
-      const t = e.key.toLowerCase();
-      if (this.isActive && this.isEnvokable) {
-        if (t.length === 1 && t !== ' ') {
-          this.trackTyped = e.key.toLowerCase();
-          if (!this.#time) this.timer = 1;
-        } else {
-          const comm = () => {
-            if (this.typed !== '') {
-              e.preventDefault();
-              const txt = this.commit;
-              this.pushTyped = txt;
-            }
-          };
-
-          switch (t) {
-            case 'backspace':
-              this.remLast;
-              break;
-            case ' ':
-              comm();
-              break;
-            case 'enter':
-              comm();
-              break;
-            case 'alt':
-              e.preventDefault();
-              console.log(t, 'cannot be logged');
-              break;
-            case 'control':
-              e.preventDefault();
-              this.end;
-              console.log(t, 'cannot be logged');
-              break;
-            default:
-              console.log(t, 'cannot be logged');
-          }
-        }
-        this.disTyped;
-      }
-    });
+    clearInterval(this.__time);
+    this.__time = undefined;
   }
 }
 
@@ -262,27 +252,79 @@ class Model {
 class Controller {
   constructor(data) {
     this.model = data.Model || data.model;
-    this.view = data.Views || data.View || data.views || data.view;
+    this.view = this.model.view;
+    this.#listeners;
   }
   get init() {
-    const m = this.model,
-      wrds = m.getWords(200, 4);
+    this.model.init();
+  }
+  keyDown(e) {
+    const t = e.key.toLowerCase();
+    if (view.isActive && model.isEnvokable) {
+      if (t.length === 1 && t !== ' ') {
+        model.trackTyped = e.key.toLowerCase();
+        if (!model.__time) model.timer = 1;
+      } else {
+        const comm = () => {
+          if (model.typed !== '') {
+            e.preventDefault();
+            const txt = model.commit,
+              ele = model.formatColor(txt);
+            view.pushTyped = ele;
+          }
+        };
 
-    wrds.then((res) => {
-      this.showModel = res;
-    });
+        switch (t) {
+          case 'backspace':
+            model.remLast;
+            break;
+          case ' ':
+            comm();
+            break;
+          case 'enter':
+            comm();
+            break;
+          case 'alt':
+            e.preventDefault();
+            console.log(t, 'cannot be logged');
+            break;
+          case 'control':
+            e.preventDefault();
+            model.end;
+            console.log(t, 'cannot be logged');
+            break;
+          default:
+            console.log(t, 'cannot be logged');
+        }
+      }
+      view.disTyped = model.typed;
+    }
   }
 
-  set showModel(s) {
-    const d = this.model;
+  get #listeners() {
+    const view = this.view,
+      model = this.model;
 
-    d.disWords(s);
+    window.addEventListener('blur', (e) => {
+      view.activate = 0;
+    });
+    document.addEventListener('click', (e) => {
+      if (e.path.includes(view.typeArea)) {
+        view.activate = 1;
+        if (!model.isEnvokable) model.reset;
+      } else {
+        view.activate = 0;
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      this.keyDown(e);
+    });
   }
 }
 
 const api = new APIs(),
   view = new View(),
   model = new Model({ api, view }),
-  App = new Controller({ model, view });
+  App = new Controller({ model });
 
 App.init;
