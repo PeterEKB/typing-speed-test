@@ -45,10 +45,10 @@ class View {
   txtTrack = this.typeArea.querySelector('text#track');
   active = 'active';
 
-  init() {
-    this.time.innerHTML = 0;
-    this.speed.innerHTML = 0;
-    this.accuracy.innerHTML = 0;
+  init(data = {time: 0, speed: 0, accuracy: 0}) {
+    this.time.innerHTML = data.time || 0;
+    this.speed.innerHTML = data.speed || 0;
+    this.accuracy.innerHTML = data.accuracy || 0;
   }
   set activate(s) {
     const v = this.typeArea.classList;
@@ -78,8 +78,7 @@ class View {
 
 class Model {
   __time;
-  time = 0;
-  tLimit = 10;
+  time = this.tLimit = 60;
   isEnvokable = 1;
   pos = 0;
   score = {
@@ -109,7 +108,7 @@ class Model {
   init() {
     const wrds = this.getWords(200, 4);
 
-    this.view.init();
+    this.view.init({time: this.time});
 
     wrds.then((res) => {
       this.disWords(res);
@@ -117,7 +116,7 @@ class Model {
   }
   get reset() {
     this.timer = 0;
-    this.time = 0;
+    this.time = this.tLimit;
     this.view.isActive = 0;
     this.isEnvokable = 1;
     this.pos = 0;
@@ -144,8 +143,8 @@ class Model {
 
     if (p) {
       this.__time = setInterval(() => {
-        this.time = +(parseFloat(this.time) + parseFloat(n)).toFixed(2);
-        if (this.time === this.tLimit) this.timer = 0;
+        this.time = +(parseFloat(this.time) - parseFloat(n)).toFixed(2);
+        if (this.time === 0) this.timer = 0;
         this.view.time.innerHTML = this.time;
         this.calcScore();
         this.view.speed.innerHTML = this.score.speedInt;
@@ -192,7 +191,7 @@ class Model {
         ? ((s.correct / s.total) * 100).toFixed(0)
         : 0;
     s.accuracy = s.accuracyInt + '%';
-    s.speedInt = ((s.total * 60) / this.time).toFixed(0);
+    s.speedInt = ((s.total * 60) / Math.abs(this.tLimit - this.time)).toFixed(0);
     s.speed = s.speedInt + ' words per minute';
     console.log(r, s.accuracyInt);
     return s;

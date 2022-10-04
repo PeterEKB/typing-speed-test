@@ -108,6 +108,7 @@ input-con {
   display: flex;
   flex: 1;
   gap: 1rem;
+  border-radius: 10rem 0 0 10rem;
   justify-content: flex-end;
   overflow: hidden;
 }
