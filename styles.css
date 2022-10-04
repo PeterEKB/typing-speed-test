@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@100;200;300;400&display=swap');
 :root {
   --margin: 20px;
-  --shadow: 0.3rem 0.3rem 0.5rem hsl(0, 0%, 0%, .1);
+  --shadow: 0.3rem 0.3rem 0.5rem hsl(0, 0%, 0%, 0.1);
 }
 * {
   padding: 0;
@@ -34,10 +34,10 @@ background {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: 
-    linear-gradient(45deg, hsl(0deg 100% 91%) 40%, transparent 20%),
+  background: linear-gradient(45deg, hsl(0deg 100% 91%) 40%, transparent 20%),
     linear-gradient(-5deg, hsl(30deg 100% 91%) 50%, transparent 0%);
-    z-index: 0;
+  z-index: 0;
+  background-blend-mode: multiply;
 }
 main {
   grid-area: m;
