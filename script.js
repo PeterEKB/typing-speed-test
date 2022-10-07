@@ -401,7 +401,6 @@ class Controller {
             break;
           case 'alt':
             e.preventDefault();
-            console.log(t, 'cannot be logged');
             break;
           case 'control':
             e.preventDefault();
@@ -409,7 +408,6 @@ class Controller {
             model.end;
             break;
           default:
-            console.log(t, 'cannot be logged');
         }
       }
       view.disTyped = model.typed;
