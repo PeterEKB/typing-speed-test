@@ -422,7 +422,7 @@ class Controller {
       view.activate = 0;
     });
     document.addEventListener('click', (e) => {
-      if (e.path.includes(view.typeArea)) {
+      if (e.composedPath().includes(view.typeArea)) {
         view.activate = 1;
         if (!model.isEnvokable) model.reset;
       } else {
