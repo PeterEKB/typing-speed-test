@@ -1,5 +1,29 @@
+console.log('3.0');
+const overlay = document.querySelector('overlay')
+window.addEventListener('mouseover', (e) => {
+  if (e.target.hasAttribute('x-tip')) {
+    create_tooltip(e)
+  }
+})
 
-console.log(2.0)
+const create_tooltip = (e) => {
+  const t = e.target,
+    ele = t.getBoundingClientRect(),
+    info = overlay.getBoundingClientRect(),
+    tool = document.createElement('tooltip'),
+    txt = document.createElement('tool-bg')
+  txt.innerHTML = t.getAttribute('x-tip')
+  tool.appendChild(txt)
+  overlay.appendChild(tool)
+
+
+  t.addEventListener('mouseout', () => {
+    tool.remove()
+  }, { once: true })
+
+  tool.style.left = `${(ele.left + ele.width / 2) / info.width * 100}%`
+  tool.style.top = `${ele.top / info.height * 100}%`
+}
 /* * * * APIs * * * */
 class APIs {
   rndWord = async (c, l) => {
@@ -25,7 +49,8 @@ class APIs {
           path.push(currentElem);
           currentElem = currentElem.parentElement;
         }
-        if (path.indexOf(window) === -1 && path.indexOf(document) === -1)
+        if (path.indexOf(window) === -1
+          && path.indexOf(document) === -1)
           path.push(document);
         if (path.indexOf(window) === -1) path.push(window);
         return path;
@@ -36,6 +61,8 @@ class APIs {
 
 class View {
   isActive = 0;
+  best = document.querySelector('best');
+  attempts = document.querySelector('attempts');
   typeArea = document.querySelector('type-area');
   time = document.querySelector('time');
   speed = document.querySelector('speed');
@@ -45,11 +72,18 @@ class View {
   txtRec = this.typeArea.querySelector('commit');
   txtTrack = this.typeArea.querySelector('text#track');
   active = 'active';
+  tool = document.querySelector('#txt-area')
+  tooltxt = document.querySelector('#txt-area tool-bg')
 
-  init(data = {time: 0, speed: 0, accuracy: 0}) {
+  init(data = { time: 0, speed: 0, accuracy: 0}) {
     this.time.innerHTML = data.time || 0;
     this.speed.innerHTML = data.speed || 0;
     this.accuracy.innerHTML = data.accuracy || 0;
+
+    const info = this.typeArea.getBoundingClientRect(),
+    o_info = overlay.getBoundingClientRect()
+    this.tool.style.left = (info.left + info.width/2)/o_info.width*100 + '%'
+    this.tool.style.top = `${info.y/o_info.height*100}%`
   }
   set activate(s) {
     const v = this.typeArea.classList;
@@ -57,9 +91,27 @@ class View {
     if (s) {
       v.add(this.active);
       this.isActive = 1;
+      this.tool.style.opacity = '0'
     } else {
       v.remove(this.active);
       this.isActive = 0;
+      this.tool.style.opacity = '1'
+    }
+  }
+  set scores(s) {
+    if (s.best) {
+      let t = s.score.outerHTML
+      const h = document.getElementById('highest')
+      if(h){
+        h.id = ''
+      }
+      this.best.innerHTML = ''
+      this.best.innerHTML = t
+      
+      s.score.id = 'highest'
+      this.attempts.appendChild(s.score)
+    }else{
+      this.attempts.appendChild(s.score)
     }
   }
   set disTyped(t) {
@@ -86,11 +138,22 @@ class Model {
     correct: 0,
     incorrect: 0,
     total: 0,
+    rank: 0,
     accuracy: '',
     accuracyInt: 0,
     speed: '',
     speedInt: 0,
   };
+  results = {
+    highest: 0,
+    scores: [{
+      score: {...this.score},
+      words: {
+        origional: [],
+        typed: []
+      }
+    }]
+  }
   words = [];
   typed = '';
   committed = [];
@@ -106,19 +169,35 @@ class Model {
 
     return this.words;
   }
+  get saveResults(){
+    const t = this.results,
+    tmp = {
+      score: this.score,
+      words: {
+        origional: this.words.slice(0, this.pos),
+        typed: this.committed
+      }
+    }
+    t.scores.push(tmp)
+    if(this.score.rank > t.scores[t.highest].score.rank){
+      t.highest = t.scores.length - 1
+      return 1
+    }
+    return 0
+  }
   init() {
     const wrds = this.getWords(200, 4);
 
-    this.view.init({time: this.time});
+    this.view.init({ time: this.time });
 
     wrds.then((res) => {
       this.disWords(res);
     });
   }
   get reset() {
-    this.timer = 0;
+    this.timer = 2;
     this.time = this.tLimit;
-    this.view.isActive = 0;
+    this.view.activate = 1;
     this.isEnvokable = 1;
     this.pos = 0;
     this.words = [];
@@ -126,6 +205,7 @@ class Model {
       correct: 0,
       incorrect: 0,
       total: 0,
+      rank: 0,
       accuracy: '',
       accuracyInt: 0,
       speed: '',
@@ -134,7 +214,7 @@ class Model {
     this.typed = '';
     this.committed = [];
     this.view.reset;
-    App.init;
+    this.init();
   }
   get timer() {
     return this.time;
@@ -142,17 +222,19 @@ class Model {
   set timer(p) {
     let n = 1;
 
-    if (p) {
+    if (p === 1) {
       this.__time = setInterval(() => {
         this.time = +(parseFloat(this.time) - parseFloat(n)).toFixed(2);
-        if (this.time === 0) this.timer = 0;
+        if (this.time === 0) this.end;
         this.view.time.innerHTML = this.time;
         this.calcScore();
         this.view.speed.innerHTML = this.score.speedInt;
         this.view.accuracy.innerHTML = this.score.accuracy;
       }, n * 1000);
+    } else if (p === 2) {
+      clearInterval(this.__time);
     } else {
-      this.end;
+      this.end
     }
   }
 
@@ -179,7 +261,7 @@ class Model {
     return ele;
   }
   calcScore(r) {
-    const s = this.score;
+    const s = this.score, sI = ((s.total * 60) / Math.abs(this.tLimit - this.time)).toFixed(0), aI = ((s.correct / s.total) * 100).toFixed(0)
     if (r === true) {
       s.correct++;
       s.total++;
@@ -188,13 +270,13 @@ class Model {
       s.total++;
     }
     s.accuracyInt =
-      ((s.correct / s.total) * 100).toFixed(0) !== 'NaN'
-        ? ((s.correct / s.total) * 100).toFixed(0)
+      aI !== 'NaN'
+        ? +aI
         : 0;
     s.accuracy = s.accuracyInt + '%';
-    s.speedInt = ((s.total * 60) / Math.abs(this.tLimit - this.time)).toFixed(0);
+    s.speedInt = sI !== 'NaN' ? +sI : 0;
     s.speed = s.speedInt + ' words per minute';
-    console.log(r, s.accuracyInt);
+    s.rank = s.speedInt * s.accuracyInt / 100 + 1
     return s;
   }
   get commit() {
@@ -239,11 +321,44 @@ class Model {
       typeof t === 'object' ? this.format(t.typed, t.same) : this.format(t);
     return ele;
   }
+  formatScore(s) {
+    const score = document.createElement('score'),
+      ind = document.createElement('text'),
+      speed = document.createElement('text'),
+      accuracy = document.createElement('text')
+
+      ind.innerHTML = s.index
+      speed.innerHTML = s.speedInt
+      accuracy.innerHTML = s.accuracyInt
+      score.appendChild(ind)
+      score.appendChild(speed)
+      score.appendChild(accuracy)
+
+      return score
+  }
+  get start(){
+    this.timer = 1
+  }
   get end() {
+    this.timer = 2
+    this.calcScore();
     this.view.activate = 0;
     this.isEnvokable = 0;
-    clearInterval(this.__time);
     this.__time = undefined;
+    if (this.time === 0) {
+      const best = this.saveResults
+
+      const format = {
+        index: this.results.scores.length - 1,
+        ...this.results.scores[this.results.scores.length - 1].score
+      },
+        scores = {
+          best,
+          score: this.formatScore(format)
+        }
+
+      this.view.scores = scores
+    }
   }
 }
 
@@ -263,7 +378,7 @@ class Controller {
     if (view.isActive && model.isEnvokable) {
       if (t.length === 1 && t !== ' ') {
         model.trackTyped = e.key.toLowerCase();
-        if (!model.__time) model.timer = 1;
+        if (!model.__time) model.start;
       } else {
         const comm = () => {
           if (model.typed !== '') {
@@ -290,8 +405,8 @@ class Controller {
             break;
           case 'control':
             e.preventDefault();
+            if(model.tLimit - model.time > 0)
             model.end;
-            console.log(t, 'cannot be logged');
             break;
           default:
             console.log(t, 'cannot be logged');
@@ -328,3 +443,5 @@ const api = new APIs(),
   App = new Controller({ model });
 
 App.init;
+
+

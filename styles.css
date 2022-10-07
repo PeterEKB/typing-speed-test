@@ -1,13 +1,67 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@100;200;300;400&display=swap');
 :root {
+  --tip-color: hsla(0, 0%, 0%, 0.5);
   --margin: 20px;
   --shadow: 0.3rem 0.3rem 0.5rem hsl(0, 0%, 0%, 0.1);
+
+  --top-h: calc(
+    var(--top-pb) + var(--best-pad-v) + 2 * var(--desc-score-pad-v)
+  );
+  --top-pb: 1rem;
+  --best-pad-v: 1rem;
+  --desc-score-pad-v: 1rem;
 }
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   font-family: 'Oswald', sans-serif;
+  user-select: none;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  border-left: 1px solid hsla(0, 0%, 95%, 1);
+}
+::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, hsla(0, 0%, 90%, 1), transparent);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(0, 100%, 90%);
+  border: 1px solid hsl(0, 0%, 0%, 0.3);
+  border-radius: 1rem;
+}
+tooltip {
+  position: absolute;
+  opacity: 1;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-100% - 1rem));
+  color: white;
+  backdrop-filter: blur(5px)
+    drop-shadow(0.2rem 0.2rem 0.3rem hsla(0, 0%, 0%, 0.4));
+  transition: opacity .3s;
+  animation: tooltip-bounce 1s infinite alternate, opacity 1s;
+}
+tool-bg {
+  display: block;
+  width: fit-content;
+  height: fit-content;
+  background: var(--tip-color);
+  padding: 1rem;
+  border-radius: 0.2rem;
+  line-height: 1rem;
+  z-index: 0;
+}
+tool-bg::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  border: 10px solid;
+  border-color: var(--tip-color) transparent transparent transparent;
+  z-index: 10;
 }
 
 body,
@@ -19,7 +73,9 @@ html {
   color: black;
   background-color: white;
 }
-content {
+content,
+overlay,
+foreground {
   display: grid;
   grid-template:
     '. . .' minmax(var(--margin), 1fr)
@@ -29,6 +85,7 @@ content {
     minmax(300px, 1920px)
     minmax(var(--margin), 1fr);
   height: 100%;
+  width: 100%;
 }
 background {
   position: absolute;
@@ -42,6 +99,7 @@ background {
 main {
   grid-area: m;
   display: grid;
+  position: relative;
   grid-template:
     '. . . . .' 1fr
     '. . . . .' 1fr
@@ -54,6 +112,119 @@ main {
   min-width: 0;
   min-height: 0;
   z-index: 50;
+}
+foreground {
+  position: absolute;
+  pointer-events: none;
+  z-index: 75;
+}
+foreground * {
+  pointer-events: auto;
+}
+overlay {
+  position: absolute;
+  user-select: none;
+  pointer-events: none;
+  z-index: 100;
+}
+
+scores {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 5rem;
+  height: 3rem;
+  background: white;
+  border: 1px solid hsla(0, 0%, 0%, 0.4);
+  border-radius: 0.3rem;
+  box-shadow: 0.1rem 0.1rem 0.2rem hsl(0, 0%, 0%, 0.2);
+  line-height: 1rem;
+  overflow: hidden;
+  cursor: default;
+  transition: height 0.3s 0.3s, width 0.3s 0.3s;
+}
+scores:hover,
+.test {
+  width: 300px;
+  height: 500px;
+}
+static {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+  transition: font-size 0.3s 0.3s;
+}
+scores:hover > static,
+.test > static {
+  font-size: 2rem;
+}
+tray {
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 3rem;
+  width: 300px;
+  height: calc(500px - 3rem);
+}
+top {
+  display: block;
+  position: sticky;
+  top: 0;
+  background: white;
+  padding-bottom: var(--top-pb);
+  box-shadow: 0 0.2rem 0.2rem hsla(0, 0%, 0%, 0.2);
+  text-align: center;
+  z-index: 5;
+}
+best::before {
+  content: 'Your best';
+  color: hsl(150, 80%, 30%);
+  font-size: 1.3rem;
+}
+best {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  width: 100%;
+  padding: 0 var(--best-pad-v);
+  align-items: center;
+}
+desc,
+score {
+  display: grid;
+  grid-template-columns: 1rem 1fr 1fr;
+  background: white;
+  padding: 0 var(--desc-score-pad-v);
+  text-align: center;
+}
+desc {
+  padding: 0 calc(var(--desc-score-pad-v) * 2 + 10px) 0
+    calc(var(--desc-score-pad-v) * 2);
+}
+attempts {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  height: calc(100% - var(--top-h) - 1rem);
+  overflow-y: auto;
+}
+attempts::before {
+  content: n;
+  color: hsl(150, 80%, 30%);
+  font-size: 1.5rem;
+}
+score {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+#highest {
+  border: 3px solid hsl(150, 100%, 40%);
+  box-shadow: 0.1rem 0.1rem 0.2rem hsla(0, 0%, 0%, 0.4);
+  z-index: 1;
+}
+attempts score:nth-child(2n-1) {
+  background: hsla(0, 2%, 90%, 1);
 }
 stats {
   display: flex;
@@ -99,14 +270,16 @@ type-area {
   align-items: center;
   vertical-align: middle;
   overflow: hidden;
-  transition: border 0.3s ease-in-out;
+  transition: box-shadow 0.1s ease-in-out;
+  cursor: pointer;
 }
 type-area.active {
-  border-color: hsl(0, 100%, 90%);
+  box-shadow: var(--shadow), 0 0 0 5px hsl(0, 100%, 90%);
 }
 input-con {
   display: flex;
   flex: 1;
+  height: 100%;
   gap: 1rem;
   border-radius: 10rem 0 0 10rem;
   justify-content: flex-end;
@@ -120,6 +293,7 @@ input-con input:focus {
 }
 textarea-con {
   display: flex;
+  position: relative;
   width: 0;
   height: 100%;
   flex: 1;
@@ -131,15 +305,29 @@ textarea-con {
   overflow: hidden;
   transition: border 0.3s ease-in-out;
 }
-type-area.active textarea-con {
-  border-left-color: hsl(0, 100%, 90%);
+type-area.active textarea-con::before {
+  content: '';
+  position: absolute;
+  left: 0%;
 }
-text,
+type-area.active #track {
+  display: flex;
+  gap: 0;
+  margin-right: 0;
+}
+type-area.active #track::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 100%;
+  background: hsl(0, 100%, 90%);
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
 commit {
   display: flex;
   gap: 1rem;
   white-space: nowrap;
-  float: right;
 }
 commit text {
   font-weight: 500;
@@ -181,5 +369,36 @@ commit text.correct {
   }
   stats {
     flex-direction: column;
+  }
+}
+
+@keyframes tooltip-bounce {
+  from {
+    transform: translate(-50%, calc(-100% - 1rem));
+  }
+  to {
+    transform: translate(-50%, calc(-110% - 1rem));
+  }
+}
+@keyframes opacity {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  51% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
   }
 }

@@ -12,9 +12,9 @@
       <background></background>
       <main>
         <stats>
-        <time></time>
-        <speed></speed>
-        <accuracy></accuracy>
+          <time x-tip="Seconds left"></time>
+          <speed x-tip="Words typed per Minute"></speed>
+          <accuracy x-tip="Typing Correctness"></accuracy>
         </stats>
         <typearea-con>
           <type-area>
@@ -22,12 +22,26 @@
               <commit></commit>
               <text id="track"></text>
             </input-con>
-            <textarea-con>
-            </textarea-con>
+            <textarea-con> </textarea-con>
           </type-area>
         </typearea-con>
       </main>
-      <foregroung></foregroung>
+      <foreground>
+        <tooltip id="txt-area">
+          <tool-bg> Click to start </tool-bg>
+        </tooltip>
+        <scores>
+          <static>Scores</static>
+          <tray>
+            <top>
+              <best></best>
+              <desc><text></text><text>score</text><text>accuracy</text></desc>
+            </top>
+            <attempts></attempts>
+          </tray>
+        </scores>
+      </foreground>
+      <overlay> </overlay>
     </content>
   </body>
 </html>
