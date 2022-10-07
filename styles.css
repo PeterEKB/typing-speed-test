@@ -160,7 +160,8 @@ scores:hover > static,
   font-size: 2rem;
 }
 tray {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: absolute;
   right: 0;
   top: 3rem;
@@ -168,10 +169,12 @@ tray {
   height: calc(500px - 3rem);
 }
 top {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: sticky;
   top: 0;
   background: white;
+  gap: .5rem;
   padding-bottom: var(--top-pb);
   box-shadow: 0 0.2rem 0.2rem hsla(0, 0%, 0%, 0.2);
   text-align: center;
@@ -181,6 +184,7 @@ best::before {
   content: 'Your best';
   color: hsl(150, 80%, 30%);
   font-size: 1.3rem;
+  line-height: 1.3rem;
 }
 best {
   display: grid;
@@ -203,9 +207,9 @@ desc {
 }
 attempts {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;;
   padding: 1rem;
-  height: calc(100% - var(--top-h) - 1rem);
+  height: 100%;
   overflow-y: auto;
 }
 attempts::before {
