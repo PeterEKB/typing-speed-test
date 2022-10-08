@@ -217,6 +217,9 @@ attempts::before {
   color: hsl(150, 80%, 30%);
   font-size: 1.5rem;
 }
+no-score {
+  margin: auto;
+}
 score {
   padding-top: 1rem;
   padding-bottom: 1rem;
