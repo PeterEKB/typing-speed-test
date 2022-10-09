@@ -62,6 +62,7 @@ class APIs {
 class View {
   isActive = 0;
   best = document.querySelector('best');
+  no_score = document.querySelector('no-score');
   attempts = document.querySelector('attempts');
   typeArea = document.querySelector('type-area');
   time = document.querySelector('time');
@@ -99,6 +100,9 @@ class View {
     }
   }
   set scores(s) {
+    if(this.no_score){
+      this.no_score.style.display = 'none';
+    }
     if (s.best) {
       let t = s.score.outerHTML
       const h = document.getElementById('highest')
