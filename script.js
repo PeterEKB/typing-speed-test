@@ -1,4 +1,4 @@
-console.log('3.0');
+console.log('3.1');
 const overlay = document.querySelector('overlay')
 window.addEventListener('mouseover', (e) => {
   if (e.target.hasAttribute('x-tip')) {
