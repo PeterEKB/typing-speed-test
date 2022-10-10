@@ -106,7 +106,7 @@ main {
     '. s s s .' 1fr
     '. . . . .' 1fr
     '. tA tA tA .'
-    '. . . . .' 1fr
+    '. . . re .' 1fr
     '. . . . .' 1fr/
     1fr 1fr 1fr 1fr 1fr;
   min-width: 0;
@@ -298,6 +298,23 @@ input-con input:focus {
   border: none;
   outline: none;
 }
+reset {
+  grid-area: re;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 15rem;
+  height: 4rem;
+  background: white;
+  padding: .3rem;
+  border: 1px solid hsla(0, 0%, 80%, 1);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  align-items: center;
+  justify-content: center;
+}
 textarea-con {
   display: flex;
   position: relative;
@@ -371,7 +388,7 @@ commit text.correct {
       '. . . . .' 1fr
       '. tA tA tA .'
       '. . . . .' 1fr
-      '. . . . .' 1fr/
+      '. . re . .' 1fr/
       0.3fr 1fr 1fr 1fr 0.3fr;
   }
   stats {
