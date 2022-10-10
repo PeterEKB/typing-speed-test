@@ -188,18 +188,40 @@ class Model {
           typed: this.committed,
         },
       };
+    console.log(t);
     t.scores.push(tmp);
     if (this.score.rank > t.scores[t.highest].score.rank) {
       t.highest = t.scores.length - 1;
+      let r = JSON.stringify(this.results);
+      localStorage.setItem('results', r);
       return 1;
     }
+    let r = JSON.stringify(this.results);
+    localStorage.setItem('results', r);
+
     return 0;
   }
   init() {
-    const wrds = this.getWords(200, 4);
-
+    const wrds = this.getWords(200, 4),
+      r = JSON.parse(localStorage.getItem('results'));
+    r ? (this.results = r) : '';
     this.view.init({ time: this.time });
+    if (this.results.scores[1]) {
+      this.results.scores.forEach((a, index) => {
+        if (!index) return;
+        const format = {
+            index: index,
+            ...a.score,
+          },
+          highest = this.results.highest,
+          scores = {
+            best: highest,
+            score: this.formatScore(format),
+          };
 
+        this.view.scores = scores;
+      });
+    }
     wrds.then((res) => {
       this.disWords(res);
     });
@@ -338,7 +360,7 @@ class Model {
 
     ind.innerHTML = s.index;
     speed.innerHTML = s.speedInt;
-    accuracy.innerHTML = s.accuracyInt;
+    accuracy.innerHTML = s.accuracy;
     score.appendChild(ind);
     score.appendChild(speed);
     score.appendChild(accuracy);
