@@ -246,7 +246,12 @@ class Model {
     this.typed = '';
     this.committed = [];
     this.view.reset;
-    this.init();
+
+    const wrds = this.getWords(200, 4);
+
+    wrds.then((res) => {
+      this.disWords(res);
+    });
   }
   get timer() {
     return this.time;
