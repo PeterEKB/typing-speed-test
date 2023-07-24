@@ -270,8 +270,8 @@ class Model {
       }, n * 1000);
     } else if (p === 2) {
       clearInterval(this.__time);
-    } else {
-      this.end;
+    // } else {
+    //   this.end;
     }
   }
 
